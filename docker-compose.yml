@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  mysqldb:
+    image: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: spring_ticket_generator
+    expose:
+      - "3307"
+    ports:
+      - "3307:3306"
