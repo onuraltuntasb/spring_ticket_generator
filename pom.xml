@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.spring-ticker-generator</groupId>
-    <artifactId>spring-ticker-generator</artifactId>
+    <artifactId>spring-ticket-generator</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>spring-ticker-generator</name>
     <description>spring-ticker-generator</description>

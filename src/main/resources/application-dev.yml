@@ -1,5 +1,5 @@
 
-#TODO secret key change for production
+#TODO application env variables injection is broken!!!
 jwtSecret:
   secretKey
 jwtExpirationMs:

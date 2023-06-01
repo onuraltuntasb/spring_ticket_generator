@@ -32,8 +32,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
-    private final JwtUtils jwtUtils;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final RoleRepository roleRepository;
 
 
@@ -101,7 +99,7 @@ public class UserServiceImpl implements UserService {
                     .name(user.getName())
                     .email(user.getEmail())
                     .authorities(user.getAuthorities())
-                    .jwtToken(jwtUtils.generateToken(userDetails))
+                    .jwtToken(new JwtUtils().generateToken(userDetails))
                     .jwtRefreshToken(refreshToken.getToken())
                     .build();
             return userAuthResponse;
@@ -155,7 +153,7 @@ public class UserServiceImpl implements UserService {
                         "User not found with this id:" + userId
                 ));
 
-        refreshTokenRepository.deleteById(userId);
+        refreshTokenService.deleteByUserId(userId);
 
         //TODO before delete need to finish other related tasks
         //deleting user is generally bad practise, disable user account instead deleting user
