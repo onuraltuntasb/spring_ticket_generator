@@ -1,3 +1,5 @@
+
+#TODO secret key change for production
 jwtSecret:
   secretKey
 jwtExpirationMs:
