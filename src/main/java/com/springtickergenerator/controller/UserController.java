@@ -72,7 +72,7 @@ public class UserController {
         }
 
         User user1 = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("post is not found with this id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("user is not found with this id : " + id));
 
 
         String auth = jwtUtils.getAuthorityClaim(token);
