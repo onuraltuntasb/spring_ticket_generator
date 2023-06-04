@@ -1,10 +1,12 @@
 package com.springtickergenerator.controller;
 
 import com.springtickergenerator.entity.Event;
+import com.springtickergenerator.entity.User;
 import com.springtickergenerator.exception.ResourceNotFoundException;
 import com.springtickergenerator.model.payload.dto.EventDTO;
 import com.springtickergenerator.model.payload.request.EventRequest;
 import com.springtickergenerator.repository.EventRepository;
+import com.springtickergenerator.repository.UserRepository;
 import com.springtickergenerator.security.JwtUtils;
 import com.springtickergenerator.service.EventService;
 import jakarta.validation.Valid;
@@ -22,18 +24,27 @@ public class EventController {
 
     private final EventService eventService;
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
     private final ModelMapper modelMapper;
 
 
     @PostMapping("/save")
-    public ResponseEntity<?> saveEvent(@Valid @RequestBody EventRequest eventRequest, @RequestParam(value = "user-id") Long userId) {
+    public ResponseEntity<?> saveEvent(@Valid @RequestBody EventRequest eventRequest
+            , @RequestHeader(name = "Authorization") String token) {
 
-        if (userId == null) {
+        if (token == null) {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
-        return ResponseEntity.ok().body(eventService.saveEvent(eventRequest, userId));
+        String email = jwtUtils.extractUsername(token);
+        log.info("email bura : {}"+ email);
+
+
+        User user = (User) userRepository.findUserByEmail(email).orElseThrow(
+                ()->new ResourceNotFoundException("user not found with this email :" + email));
+
+        return ResponseEntity.ok().body(eventService.saveEvent(eventRequest, user.getId()));
     }
 
     @PutMapping("/update")

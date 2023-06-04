@@ -1,6 +1,7 @@
 package com.springtickergenerator.entity;
 
 import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -68,5 +69,21 @@ public class Event {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
+
+    @Transactional
+    public void removeTag(Long tagId) {
+
+        System.out.println(this.tags);
+
+
+        Tag tag = this.tags.stream().filter(t -> t.getId() == tagId).findFirst().orElse(null);
+        if (tag != null) {
+
+            System.out.println(tag);
+
+            this.tags.remove(tag);
+            tag.getEvents().remove(this);
+        }
+    }
 
 }
