@@ -33,7 +33,7 @@ public class TagController {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
-        String email = jwtUtils.extractUsername(token);
+        String email = jwtUtils.extractUsername(token.substring(7));
 
         userRepository.findUserByEmail(email).orElseThrow(
                 () -> new ResourceNotFoundException("user not found with this email :" + email));
@@ -56,7 +56,7 @@ public class TagController {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
-        String email = jwtUtils.extractUsername(token);
+        String email = jwtUtils.extractUsername(token.substring(7));
 
         userRepository.findUserByEmail(email).orElseThrow(
                 () -> new ResourceNotFoundException("user not found with this email :" + email));
@@ -79,7 +79,7 @@ public class TagController {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
-        String email = jwtUtils.extractUsername(token);
+        String email = jwtUtils.extractUsername(token.substring(7));
 
         userRepository.findUserByEmail(email).orElseThrow(
                 () -> new ResourceNotFoundException("user not found with this email :" + email));

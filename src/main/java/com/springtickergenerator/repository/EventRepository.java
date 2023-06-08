@@ -9,4 +9,5 @@ public interface EventRepository extends JpaRepository<Event,Long> {
 
     Set<Event> findEventsByTagsIn(Set<Long> tags);
 
+
 }

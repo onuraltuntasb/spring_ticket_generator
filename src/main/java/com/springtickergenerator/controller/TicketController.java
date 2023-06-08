@@ -23,72 +23,69 @@ public class TicketController {
     private final TicketService ticketService;
     private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
-    private final TicketRepository ticketRepository;
-
 
 
     @PostMapping("/save")
     public ResponseEntity<?> saveTicket(@Valid @RequestBody TicketRequest ticketRequest
-            ,@RequestHeader(name = "Authorization") String token
-            ,@RequestParam(name = "event-id") Long eventId
+            , @RequestHeader(name = "Authorization") String token
+            , @RequestParam(name = "event-id") Long eventId
     ) {
 
-        if (token == null || eventId ==null) {
+        if (token == null || eventId == null) {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
         String email = jwtUtils.extractUsername(token);
 
 
-        User user = (User) userRepository.findUserByEmail(email).orElseThrow(
-                ()->new ResourceNotFoundException("user not found with this email :" + email));
+       userRepository.findUserByEmail(email).orElseThrow(
+                () -> new ResourceNotFoundException("user not found with this email :" + email));
 
-        return ResponseEntity.ok().body(ticketService.saveTicket(ticketRequest,eventId));
+        return ResponseEntity.ok().body(ticketService.saveTicket(ticketRequest, eventId));
     }
 
     @PutMapping("/update")
     public ResponseEntity<?> saveTicket(@Valid @RequestBody TicketRequest ticketRequest
-            ,@RequestHeader(name = "Authorization") String token
-            ,@RequestParam(name = "event-id") Long eventId
-            ,@RequestParam(name = "ticket-id") Long ticketId
+            , @RequestHeader(name = "Authorization") String token
+            , @RequestParam(name = "event-id") Long eventId
+            , @RequestParam(name = "ticket-id") Long ticketId
     ) {
 
-        if (token == null || eventId == null || ticketId ==null) {
+        if (token == null || eventId == null || ticketId == null) {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
         String email = jwtUtils.extractUsername(token);
 
 
-        User user = (User) userRepository.findUserByEmail(email).orElseThrow(
-                ()->new ResourceNotFoundException("user not found with this email :" + email));
+      userRepository.findUserByEmail(email).orElseThrow(
+                () -> new ResourceNotFoundException("user not found with this email :" + email));
 
-        return ResponseEntity.ok().body(ticketService.updateTicket(ticketRequest,eventId,ticketId));
+        return ResponseEntity.ok().body(ticketService.updateTicket(ticketRequest, eventId, ticketId));
     }
 
     //TODO after start date deleting ticket is real real concern
 
     @PutMapping("/delete")
     public ResponseEntity<?> deleteTicket(
-            @RequestParam(name = "ticket-id") Long ticketId
-            ,@RequestHeader(name = "Authorization") String token
+            @RequestParam(name = "ticket-id") Long ticketId,
+            @RequestParam(name = "event-id") Long eventId,
+            @RequestHeader(name = "Authorization") String token
     ) {
 
-        if (ticketId == null ||token == null) {
+        if (ticketId == null || eventId == null || token == null) {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
         String email = jwtUtils.extractUsername(token);
 
+        userRepository.findUserByEmail(email).orElseThrow(
+                () -> new ResourceNotFoundException("user not found with this email :" + email));
 
-        User user = (User) userRepository.findUserByEmail(email).orElseThrow(
-                ()->new ResourceNotFoundException("user not found with this email :" + email));
-
-        ticketRepository.deleteById(ticketId);
+        ticketService.deleteTicket(ticketId, eventId);
         return ResponseEntity.ok().body("success");
 
     }
-
 
 
 }

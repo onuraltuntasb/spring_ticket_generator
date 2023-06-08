@@ -37,9 +37,7 @@ public class EventController {
             return ResponseEntity.badRequest().body("Bad request!");
         }
 
-        String email = jwtUtils.extractUsername(token);
-        log.info("email bura : {}"+ email);
-
+        String email = jwtUtils.extractUsername(token.substring(7));
 
         User user = (User) userRepository.findUserByEmail(email).orElseThrow(
                 ()->new ResourceNotFoundException("user not found with this email :" + email));
@@ -57,13 +55,9 @@ public class EventController {
         }
 
         Event event1 = eventRepository.findById(eventId).orElseThrow(
-                () -> new ResourceNotFoundException("post is not found with this id : " + eventId));
+                () -> new ResourceNotFoundException("event is not found with this id : " + eventId));
 
-        String auth = jwtUtils.getAuthorityClaim(token);
-
-        //TODO just admin update is bad, user needs update his/her own ticket
-
-        if (event1.getUser().getEmail().equals(jwtUtils.extractUsername(token.substring(7))) || auth.equals("ROLE_ADMIN")) {
+        if (event1.getUser().getEmail().equals(jwtUtils.extractUsername(token.substring(7)))) {
             EventDTO eventDTO = modelMapper.map(eventService.updateEvent(eventRequest, eventId), EventDTO.class);
             return ResponseEntity.ok().body(eventDTO);
         } else {
@@ -81,11 +75,10 @@ public class EventController {
 
         Event event1 = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("event is not found with this id : " + eventId));
 
-
         String auth = jwtUtils.getAuthorityClaim(token);
 
         if (event1.getUser().getEmail().equals(jwtUtils.extractUsername(token.substring(7))) || auth.equals("ROLE_ADMIN")) {
-            eventRepository.deleteById(eventId);
+            eventService.deleteEvent(eventId);
             return ResponseEntity.ok().body("success");
         } else {
             return ResponseEntity.badRequest().body("You are not allowed to this action!");

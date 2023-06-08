@@ -6,7 +6,6 @@ import com.springtickergenerator.entity.Tag;
 import com.springtickergenerator.exception.ResourceNotFoundException;
 import com.springtickergenerator.repository.EventRepository;
 import com.springtickergenerator.repository.TagRepository;
-import jakarta.websocket.server.ServerEndpoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,6 @@ public class TagServiceImpl implements TagService{
         }
 
         tagRepository.deleteById(tagId);
-
 
     }
 }

@@ -8,10 +8,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -33,26 +34,27 @@ public class Event {
     @NotBlank
     private String description;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NotNull
-    private Date createdAt;
+    private int seatCount;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NotNull
-    private Date updatedAt;
+    private OffsetDateTime startDate;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NotNull
-    private Date endDate;
+    private OffsetDateTime ticketSellingStartDate;
+
+    @NotNull
+    private OffsetDateTime endDate;
+
+    @NotNull
+    private OffsetDateTime createdAt;
+
+    @NotNull
+    private OffsetDateTime updatedAt;
 
     @NotNull
     private Boolean status;
 
-    private int seatCount;
-
-    //comma seperated
-    @NotBlank
-    private String availableSeats;
 
 
     @ManyToMany(

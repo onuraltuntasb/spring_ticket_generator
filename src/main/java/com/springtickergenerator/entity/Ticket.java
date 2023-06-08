@@ -20,6 +20,12 @@ public class Ticket {
     private Long id;
 
     @NotBlank
+    private String name;
+
+    @NotBlank
+    private String description;
+
+    @NotBlank
     private String barcode;
 
     @NotBlank
