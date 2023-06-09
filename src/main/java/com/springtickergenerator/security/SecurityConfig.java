@@ -33,6 +33,7 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAthFilter;
     private final UserRepository userRepository;
+    private final AuthEntryPointJwt authEntryPointJwt;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,7 +43,7 @@ public class SecurityConfig {
 
 
         http.csrf(csrf -> csrf.disable())
-                //.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPointJwt))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/user/**").permitAll()

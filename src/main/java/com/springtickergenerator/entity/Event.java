@@ -10,9 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -56,7 +54,6 @@ public class Event {
     private Boolean status;
 
 
-
     @ManyToMany(
             fetch = FetchType.LAZY,
             cascade ={CascadeType.PERSIST,CascadeType.MERGE})
@@ -75,13 +72,12 @@ public class Event {
     @Transactional
     public void removeTag(Long tagId) {
 
-        System.out.println(this.tags);
-
+        //System.out.println(this.tags);
 
         Tag tag = this.tags.stream().filter(t -> t.getId() == tagId).findFirst().orElse(null);
         if (tag != null) {
 
-            System.out.println(tag);
+            //System.out.println(tag);
 
             this.tags.remove(tag);
             tag.getEvents().remove(this);

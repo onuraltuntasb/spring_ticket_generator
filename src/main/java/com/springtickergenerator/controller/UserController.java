@@ -5,6 +5,7 @@ import com.springtickergenerator.exception.ResourceNotFoundException;
 import com.springtickergenerator.model.payload.dto.UserDTO;
 import com.springtickergenerator.model.payload.request.CheckAuthRequest;
 import com.springtickergenerator.model.payload.request.TokenRefreshRequest;
+import com.springtickergenerator.model.payload.request.UserRequest;
 import com.springtickergenerator.repository.UserRepository;
 import com.springtickergenerator.security.JwtUtils;
 import com.springtickergenerator.service.UserService;
@@ -30,13 +31,13 @@ public class UserController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody User user) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRequest userRequest) {
 
 
         return ResponseEntity.ok(
                 userService.setUserOtherParams(
                         userService.registerUser(
-                                user, true), true
+                                userRequest , true), true
                 )
         );
     }

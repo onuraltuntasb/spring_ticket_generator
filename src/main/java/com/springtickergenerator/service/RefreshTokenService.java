@@ -3,12 +3,12 @@ package com.springtickergenerator.service;
 
 import com.springtickergenerator.entity.RefreshToken;
 import com.springtickergenerator.exception.ResourceNotFoundException;
-import com.springtickergenerator.exception.TokenRefreshException;
+import com.springtickergenerator.exception.TokenCustomException;
+import com.springtickergenerator.exception.TokenCustomException;
 import com.springtickergenerator.repository.RefreshTokenRepository;
 import com.springtickergenerator.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -43,16 +43,17 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             refreshTokenRepository.delete(token);
-            throw new TokenRefreshException(token.getToken(),
-                    "Refresh token was expired. Please make a new signin request");
+
+            throw new TokenCustomException(token.getToken(),
+                    "Refresh token was expired. Please make a new sign in request");
         }
 
         return token;
     }
 
     @Transactional
-    public int deleteByUserId(Long userId) {
-        return refreshTokenRepository.deleteByUser(userRepository.findById(userId)
+    public void deleteByUserId(Long userId) {
+        refreshTokenRepository.deleteByUser(userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found in refresh token service!")));
     }
 }

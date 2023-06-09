@@ -33,14 +33,11 @@ public class EventController {
     public ResponseEntity<?> saveEvent(@Valid @RequestBody EventRequest eventRequest
             , @RequestHeader(name = "Authorization") String token) {
 
-        if (token == null) {
-            return ResponseEntity.badRequest().body("Bad request!");
-        }
 
         String email = jwtUtils.extractUsername(token.substring(7));
 
         User user = (User) userRepository.findUserByEmail(email).orElseThrow(
-                ()->new ResourceNotFoundException("user not found with this email :" + email));
+                ()->new ResourceNotFoundException("User not found with this email :" + email));
 
         return ResponseEntity.ok().body(eventService.saveEvent(eventRequest, user.getId()));
     }
@@ -50,9 +47,6 @@ public class EventController {
             , @RequestHeader(name = "Authorization") String token) {
 
 
-        if (eventId == null) {
-            return ResponseEntity.badRequest().body("Bad request!");
-        }
 
         Event event1 = eventRepository.findById(eventId).orElseThrow(
                 () -> new ResourceNotFoundException("event is not found with this id : " + eventId));
@@ -61,7 +55,7 @@ public class EventController {
             EventDTO eventDTO = modelMapper.map(eventService.updateEvent(eventRequest, eventId), EventDTO.class);
             return ResponseEntity.ok().body(eventDTO);
         } else {
-            return ResponseEntity.badRequest().body("You are not allowed to this action!");
+            return ResponseEntity.badRequest().body("You are not allowed to this action");
         }
 
     }
@@ -69,19 +63,15 @@ public class EventController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteEvent(@RequestParam(value = "event-id") Long eventId, @RequestHeader(name = "Authorization") String token) {
 
-        if (eventId == null) {
-            return ResponseEntity.badRequest().body("Bad request!");
-        }
-
-        Event event1 = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("event is not found with this id : " + eventId));
+        Event event1 = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event is not found with this id : " + eventId));
 
         String auth = jwtUtils.getAuthorityClaim(token);
 
-        if (event1.getUser().getEmail().equals(jwtUtils.extractUsername(token.substring(7))) || auth.equals("ROLE_ADMIN")) {
+        if (event1.getUser().getEmail().equals(jwtUtils.extractUsername(token.substring(7)))) {
             eventService.deleteEvent(eventId);
             return ResponseEntity.ok().body("success");
         } else {
-            return ResponseEntity.badRequest().body("You are not allowed to this action!");
+            return ResponseEntity.badRequest().body("You are not allowed to this action");
         }
 
     }

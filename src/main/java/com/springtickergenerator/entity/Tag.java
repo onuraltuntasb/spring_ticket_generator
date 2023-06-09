@@ -30,8 +30,6 @@ public class Tag {
     @Column(unique = true)
     private String name;
 
-
-
     @ManyToMany(fetch = FetchType.LAZY,
             cascade ={CascadeType.PERSIST,CascadeType.MERGE},
             mappedBy = "tags")

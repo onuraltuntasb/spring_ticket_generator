@@ -1,8 +1,7 @@
 package com.springtickergenerator.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.springtickergenerator.exception.TokenCustomException;
+import io.jsonwebtoken.*;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -57,7 +56,21 @@ public class JwtUtils {
 
         System.out.println("signkey : " + jwtSigningKey);
 
-        return Jwts.parser().setSigningKey(jwtSigningKey).parseClaimsJws(token).getBody();
+        Claims claims = null;
+
+        try {
+            claims = Jwts.parser().setSigningKey(jwtSigningKey).parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException e) {
+            throw new TokenCustomException(token, "Jwt token is expired");
+        } catch (MalformedJwtException e) {
+            throw new TokenCustomException(token, "Jwt token is malformed");
+        } catch (SignatureException e) {
+            throw new TokenCustomException(token, "Jwt token signature exception");
+        } catch (Exception e) {
+            throw new TokenCustomException(token, e.getMessage());
+        }
+
+        return claims;
     }
 
 

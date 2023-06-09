@@ -36,6 +36,7 @@ public class EventServiceImpl implements EventService {
     ZoneOffset zoneOffSet = ZoneOffset.of("+00:00");
 
 
+    @Transactional
     @Override
     public Event updateEvent(EventRequest eventRequest, Long eventId) {
 
@@ -52,19 +53,20 @@ public class EventServiceImpl implements EventService {
             if (rEvent.getStartDate().isBefore(rEvent.getEndDate())) {
 
                 //ticket selling start date is after event start date
-                if (rEvent.getTicketSellingStartDate().isAfter(rEvent.getStartDate().plusMinutes(5))) {
+                if (rEvent.getTicketSellingStartDate().isBefore(rEvent.getStartDate().minusMinutes(5))) {
 
                     rEvent.setDescription(eventRequest.getDescription());
 
-                    //drop as_eventid and insert data again
-                    String tableName = "as_"+eventId;
-                    dropASTable(tableName);
-                    try {
-                        insertAsBatch(tableName, eventRequest.getSeats());
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
+                    if(eventRequest.getSeats()!=null){
+                        //drop as_eventid and insert data again
+                        String tableName = "as_" + eventId;
+                        dropASTable(tableName);
+                        try {
+                            insertAsBatch(tableName, eventRequest.getSeats());
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-
 
                     if (eventRequest.getStatus() != null && rEvent.getStatus() != null) {
 
@@ -77,33 +79,33 @@ public class EventServiceImpl implements EventService {
 
                                     if (eventRequest.getStartDate().isBefore(rEvent.getEndDate())) {
 
-                                        if (eventRequest.getTicketSellingStartDate().isAfter(rEvent.getStartDate().plusMinutes(5))) {
+                                        if (eventRequest.getTicketSellingStartDate().isBefore(rEvent.getStartDate().minusMinutes(5))) {
                                             rEvent.setStartDate(eventRequest.getStartDate());
                                             rEvent.setEndDate(eventRequest.getEndDate());
                                             rEvent.setTicketSellingStartDate(eventRequest.getTicketSellingStartDate());
                                             rEvent.setStatus(true);
                                         } else {
-                                            throw new RuntimeException("current date must be 5 before ticket selling date");
+                                            throw new RuntimeException("Current date must be 5min before ticket selling date");
                                         }
 
                                     } else {
-                                        throw new RuntimeException("startDate is after endDate!");
+                                        throw new RuntimeException("Start date is after endDate");
                                     }
 
                                 } else {
-                                    throw new RuntimeException("startDate is after endDate!");
+                                    throw new RuntimeException("Start date is after endDate");
                                 }
 
 
                             } else {
-                                throw new RuntimeException("startDate or endDate or ticketSellinDate is null");
+                                throw new RuntimeException("Start date or endDate or ticket selling date is null");
                             }
                         } else {
                             rEvent.setStatus(eventRequest.getStatus());
                         }
 
                     } else {
-                        throw new RuntimeException("eventRequest status or event status is null");
+                        throw new RuntimeException("Event request status or event status is null");
                     }
 
 
@@ -117,20 +119,23 @@ public class EventServiceImpl implements EventService {
                                     .orElseThrow(() -> new ResourceNotFoundException("Tag not found with this id : " + requestTag)));
 
                         }
+                        rEvent.setTags(tags);
                     }
-                    rEvent.setTags(tags);
+                    if(eventRequest.getDescription()!=null){
+                        rEvent.setDescription(eventRequest.getDescription());
+                    }
+
 
                 } else {
-                    throw new RuntimeException("current date must be 5 before ticket selling date");
+                    throw new RuntimeException("Current date must be 5min before ticket selling date");
                 }
             } else {
-                throw new RuntimeException("startDate is after endDate!");
+                throw new RuntimeException("Start date is after end date");
             }
 
         } else {
-            throw new RuntimeException("startDate is not after currentDate!");
+            throw new RuntimeException("Start date is not after current date!");
         }
-
 
         return eventRepository.save(rEvent);
 
@@ -157,42 +162,50 @@ public class EventServiceImpl implements EventService {
         Event event = null;
         OffsetDateTime offsetCurrDateTime = OffsetDateTime.now(zoneOffSet);
 
-        //event startDate is after current time
-        if (eventRequest.getStartDate().isAfter(offsetCurrDateTime)) {
 
-            //event startDate is before endDate
-            if (eventRequest.getStartDate().isBefore(eventRequest.getEndDate())) {
+        if (eventRequest.getStartDate() != null && eventRequest.getEndDate() != null
+                && eventRequest.getTicketSellingStartDate() != null) {
 
-                //ticketSelling after startDate
-                if (eventRequest.getTicketSellingStartDate().isAfter(eventRequest.getStartDate())) {
+            //event startDate is after current time
+            if (eventRequest.getStartDate().isAfter(offsetCurrDateTime)) {
 
-                    event = Event.builder()
-                            .name(eventRequest.getName())
-                            .description(eventRequest.getDescription())
-                            .seatCount(eventRequest.getSeats().size())
-                            .startDate(eventRequest.getStartDate())
-                            .endDate(eventRequest.getEndDate())
-                            .createdAt(offsetCurrDateTime)
-                            .updatedAt(offsetCurrDateTime)
-                            .status(eventRequest.getStatus())
-                            .tags(tags)
-                            .build();
+                //event startDate is before endDate
+                if (eventRequest.getStartDate().isBefore(eventRequest.getEndDate())) {
 
+                    //ticketSelling before startDate
+                    if (eventRequest.getTicketSellingStartDate().isBefore(eventRequest.getStartDate().minusMinutes(5))) {
+
+                        event = Event.builder()
+                                .name(eventRequest.getName())
+                                .description(eventRequest.getDescription())
+                                .seatCount(eventRequest.getSeats().size())
+                                .startDate(eventRequest.getStartDate())
+                                .ticketSellingStartDate(eventRequest.getTicketSellingStartDate())
+                                .endDate(eventRequest.getEndDate())
+                                .createdAt(offsetCurrDateTime)
+                                .updatedAt(offsetCurrDateTime)
+                                .status(eventRequest.getStatus())
+                                .tags(tags)
+                                .build();
+
+                    } else {
+                        throw new RuntimeException("Ticket selling start date must be after start date!");
+                    }
+
+                } else if (eventRequest.getStartDate().isAfter(eventRequest.getEndDate())) {
+                    throw new RuntimeException("Start date is after end date");
                 } else {
-                    throw new RuntimeException("ticketSellingStartDate must be after startDate!");
+                    throw new RuntimeException("Start date is equal to end date");
                 }
 
-            } else if (eventRequest.getStartDate().isAfter(eventRequest.getEndDate())) {
-                throw new RuntimeException("startDate is after endDate!");
             } else {
-                throw new RuntimeException("startDate is equal to endDate!");
+                throw new RuntimeException("Start date is equal to now");
             }
 
-        } else if (eventRequest.getStartDate().isBefore(offsetCurrDateTime)) {
-            throw new RuntimeException("startDate is before now!");
         } else {
-            throw new RuntimeException("startDate is equal to now!");
+            throw new RuntimeException("Start date or endDate or ticket selling date is null");
         }
+
 
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User not found with this id : " + userId)
@@ -226,24 +239,21 @@ public class EventServiceImpl implements EventService {
     @Override
     public void deleteEvent(Long eventId) {
 
-        Event event =eventRepository.findById(eventId).orElseThrow(()->new ResourceNotFoundException("event not found with this id!"));
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("event not found with this id!"));
 
-        if(!event.getStatus()){
+        if (!event.getStatus()) {
             eventRepository.deleteById(eventId);
-            dropASTable("as_"+ eventId);
-        }else{
-            throw new RuntimeException("event status is active, must be disable");
+            dropASTable("as_" + eventId);
+        } else {
+            throw new RuntimeException("Event status is active, must be disable");
         }
     }
 
-    public void dropASTable(String tableName){
+    public void dropASTable(String tableName) {
 
-        try
-        {
-            jdbcTemplate.execute("DROP TABLE "+ tableName + ";");
-        }
-        catch (DataAccessException e)
-        {
+        try {
+            jdbcTemplate.execute("DROP TABLE " + tableName + ";");
+        } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }
 
@@ -284,6 +294,5 @@ public class EventServiceImpl implements EventService {
         ps.close();
 
     }
-
 
 }

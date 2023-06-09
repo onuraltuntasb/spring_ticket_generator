@@ -52,6 +52,7 @@ public class User implements UserDetails {
     @Column(name = "UserStatus")
     private UserStatus status;
 
+
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "users_roles",

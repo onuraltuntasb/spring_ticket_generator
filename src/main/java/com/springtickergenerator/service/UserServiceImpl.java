@@ -3,14 +3,15 @@ package com.springtickergenerator.service;
 import com.springtickergenerator.entity.RefreshToken;
 import com.springtickergenerator.entity.User;
 import com.springtickergenerator.exception.ResourceNotFoundException;
-import com.springtickergenerator.exception.TokenRefreshException;
+import com.springtickergenerator.exception.TokenCustomException;
 import com.springtickergenerator.model.payload.request.TokenRefreshRequest;
+import com.springtickergenerator.model.payload.request.UserRequest;
 import com.springtickergenerator.model.payload.response.TokenRefreshResponse;
 import com.springtickergenerator.model.payload.response.UserAuthResponse;
-import com.springtickergenerator.repository.RefreshTokenRepository;
 import com.springtickergenerator.repository.RoleRepository;
 import com.springtickergenerator.repository.UserRepository;
 import com.springtickergenerator.security.JwtUtils;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,25 +36,33 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
 
 
+    @Transactional
     @Override
-    public User registerUser(User user, boolean authenticated) {
+    public User registerUser(UserRequest userRequest, boolean authenticated) {
 
-        user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
+        User user = new User();
 
-        user.setStatus(User.UserStatus.ACTIVE);
+        if(userRequest.getAdminCreationSecret()!=null && !userRequest.getAdminCreationSecret().isEmpty() &&
+                userRequest.getAdminCreationSecret().equals("ydSR&R*07I")){
+            user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_ADMIN")));
+        }else{
+            user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
+        }
 
-        String plainPassword = user.getPassword();
+
+        String plainPassword = userRequest.getPassword();
         if (plainPassword != null) {
             user.setPassword(passwordEncoder.encode(plainPassword));
         } else {
             throw new ResourceNotFoundException("User password not found!");
         }
 
-        User rUser = null;
+        user.setEmail(userRequest.getEmail());
+        user.setName(userRequest.getName());
+        user.setStatus(User.UserStatus.ACTIVE);
 
-        rUser = userRepository.save(user);
 
-        return rUser;
+        return userRepository.save(user);
     }
 
     @Override
@@ -65,11 +74,6 @@ public class UserServiceImpl implements UserService {
                         new ResourceNotFoundException
                                 ("Not found email with id = " + user.getEmail()));
 
-        if (!rUser.getName().equals(user.getName())) {
-            //just throw bad credentials for security purposes
-            log.error("username is wrong!");
-            throw new BadCredentialsException("Bad credentials!");
-        }
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -93,7 +97,11 @@ public class UserServiceImpl implements UserService {
             refreshToken = refreshTokenService
                     .createRefreshToken(user.getId());
         }
-        try {
+
+        if(refreshToken ==null){
+            throw new NullPointerException("Refresh token is null");
+        }
+
             UserAuthResponse userAuthResponse = new UserAuthResponse();
             userAuthResponse = UserAuthResponse.builder()
                     .name(user.getName())
@@ -103,10 +111,7 @@ public class UserServiceImpl implements UserService {
                     .jwtRefreshToken(refreshToken.getToken())
                     .build();
             return userAuthResponse;
-        } catch (NullPointerException e) {
-            log.error("userDetails or user possibly null!");
-            return null;
-        }
+
     }
 
     @Override
@@ -120,7 +125,7 @@ public class UserServiceImpl implements UserService {
                     String token = new JwtUtils().generateToken(user);
                     return new TokenRefreshResponse(token, requestRefreshToken);
                 })
-                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
+                .orElseThrow(() -> new TokenCustomException(requestRefreshToken,
                         "Refresh token is not in database!"));
 
     }
@@ -133,14 +138,11 @@ public class UserServiceImpl implements UserService {
                         "User not found with this id:" + userId
                 ));
 
-        if (rUser != null) {
-
             //update just these fields
             rUser.setName(user.getName());
 
             //TODO before user status update need to finish other related tasks
             //rUser.setStatus(user.getStatus());
-        }
 
         return userRepository.save(rUser);
     }
@@ -148,7 +150,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long userId) {
 
-        User rUser = userRepository.findById(userId)
+       userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found with this id:" + userId
                 ));
