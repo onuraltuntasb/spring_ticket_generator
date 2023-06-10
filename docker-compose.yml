@@ -3,14 +3,16 @@ services:
   spring-ticket-generator:
     image: onuraltuntasb/spring-ticket-generator
     ports:
-      - "8082:8081"
+      - "8080:8080"
     networks:
       - ticket-generator-mysql-network
+    environment:
+      - spring.datasource.url=jdbc:mysql://mysqldb:3307/ticket_generator?createDatabaseIfNotExist=true&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
     depends_on:
       - mysqldb
 
   mysqldb:
-    image: mysql:8
+    image: mysql
     networks:
       - ticket-generator-mysql-network
     restart: unless-stopped
@@ -19,9 +21,9 @@ services:
       MYSQL_DATABASE: ticket_generator
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-time-zone=+00:00']
     expose:
-      - "3307"
+      - "3306"
     ports:
-      - "3307:3306"
+      - "3306:3306"
 
 networks:
   ticket-generator-mysql-network:
