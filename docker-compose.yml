@@ -1,13 +1,27 @@
 version: "3.9"
 services:
+  spring-ticket-generator:
+    image: onuraltuntasb/spring-ticket-generator
+    ports:
+      - "8082:8081"
+    networks:
+      - ticket-generator-mysql
+    depends_on:
+      - mysqldb
+
   mysqldb:
-    image: mysql
+    image: mysql:8
+    networks:
+      - ticket-generator-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: spring_ticket_generator
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE: mysqldb
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-time-zone=+00:00']
     expose:
       - "3307"
     ports:
       - "3307:3306"
+
+networks:
+  ticket-generator-mysql:
