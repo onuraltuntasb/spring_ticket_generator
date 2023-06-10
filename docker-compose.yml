@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   spring-ticket-generator:
-    image: onuraltuntasb/spring-ticket-generator
+    image: onuraltuntasb/spring-ticket-generator:latest
     ports:
       - "8080:8080"
     networks:
@@ -10,7 +10,7 @@ services:
       - mysqldb
 
   mysqldb:
-    image: mysql
+    image: mysql:8
     networks:
       - ticket-generator-mysql-network
     restart: unless-stopped
