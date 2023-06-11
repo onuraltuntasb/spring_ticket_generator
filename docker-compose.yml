@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   spring-ticket-generator:
-    image: onuraltuntasb/spring-ticket-generator:latest
+    image: spring-ticket-generator:latest
     ports:
       - "8080:8080"
     networks:
@@ -18,10 +18,6 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: ticket_generator
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-time-zone=+00:00']
-    expose:
-      - "3333"
-    ports:
-      - "3333:3306"
 
 networks:
   mysql-network:
