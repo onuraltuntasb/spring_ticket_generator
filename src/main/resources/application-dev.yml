@@ -11,7 +11,7 @@ jwtRefreshExpirationSecond:
 
 spring:
   datasource:
-    url: jdbc:mysql://mysqldb:3333/ticket_generator?createDatabaseIfNotExist=true&autoReconnect=false&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    url: jdbc:mysql://mysqldb/ticket_generator?createDatabaseIfNotExist=true&autoReconnect=false&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
     username: root
     password: root
   jpa:
