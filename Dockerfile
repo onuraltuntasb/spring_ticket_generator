@@ -1,5 +1,3 @@
 FROM openjdk:17
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} spring-ticket-generator-new.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-Dspring.profiles.active=dev", "-jar","/spring-ticket-generator-new.jar"]
+COPY target/*.jar spring-ticket-generator-0.0.1-SNAPSHOT.jar
+ENTRYPOINT ["java","-Dspring.profiles.active=dev", "-jar","spring-ticket-generator-0.0.1-SNAPSHOT.jar"]
