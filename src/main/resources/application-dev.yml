@@ -12,8 +12,8 @@ jwtRefreshExpirationSecond:
 spring:
   datasource:
     url: jdbc:mysql://mysqldb:3333/ticket_generator?createDatabaseIfNotExist=true&autoReconnect=false&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
-    username: root
-    password: root
+    username: onur
+    password: onur_pw
   jpa:
     hibernate:
       ddl-auto: update
