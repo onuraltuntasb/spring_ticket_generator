@@ -67,25 +67,12 @@ public class UserController {
         return ResponseEntity.ok("hello from ec2!");
     }
 
-    @GetMapping("/hello-new")
-    public ResponseEntity<?> getHelloNew() {
-        return ResponseEntity.ok("hello new from ec2!");
+    @GetMapping("/selam")
+    public ResponseEntity<?> getSelam() {
+        return ResponseEntity.ok("selam from ec2!");
     }
 
-    @GetMapping("/hello-new-new")
-    public ResponseEntity<?> getHelloNewNew() {
-        return ResponseEntity.ok("hello new new from ec2!");
-    }
 
-    @GetMapping("/hello-new-new-new")
-    public ResponseEntity<?> getHelloNewNewNew() {
-        return ResponseEntity.ok("hello new new new from ec2!");
-    }
-
-    @GetMapping("/hi")
-    public ResponseEntity<?> getHi() {
-        return ResponseEntity.ok("hi from ec2!");
-    }
 
 
     @PutMapping("/update")
