@@ -72,6 +72,11 @@ public class UserController {
         return ResponseEntity.ok("selam from ec2!");
     }
 
+    @GetMapping("/commo")
+    public ResponseEntity<?> getCommo() {
+        return ResponseEntity.ok("commo es tas from ec2!");
+    }
+
 
 
 
