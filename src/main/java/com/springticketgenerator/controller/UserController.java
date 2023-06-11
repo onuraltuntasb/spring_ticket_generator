@@ -82,6 +82,11 @@ public class UserController {
         return ResponseEntity.ok("hello new new new from ec2!");
     }
 
+    @GetMapping("/hi")
+    public ResponseEntity<?> getHi() {
+        return ResponseEntity.ok("hi from ec2!");
+    }
+
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@Valid @RequestBody User user,
