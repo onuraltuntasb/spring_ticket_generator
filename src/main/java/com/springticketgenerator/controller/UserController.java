@@ -67,6 +67,11 @@ public class UserController {
         return ResponseEntity.ok("hello from ec2!");
     }
 
+    @GetMapping("/hello-new")
+    public ResponseEntity<?> getHelloNew() {
+        return ResponseEntity.ok("hello new from ec2!");
+    }
+
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@Valid @RequestBody User user,
             @RequestParam(value = "id", required = true) Long id,

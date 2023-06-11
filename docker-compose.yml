@@ -23,9 +23,9 @@ services:
   spring-ticket-generator:
     image: onuraltuntasb/spring-ticket-generator
     expose:
-      - "8080"
+      - "8081"
     ports:
-      - "8080:8080"
+      - "8081:8080"
     networks:
       - mysql-network
     depends_on:
