@@ -1,14 +1,4 @@
 
-#TODO application env variables injection is broken!!!
-jwtSecret:
-  secretKey
-jwtExpirationMs:
-  86400000 # 1day
-jwtRefreshExpirationSecond:
-  25920000 # 1month
-
-#url
-
 spring:
   datasource:
     url: jdbc:mysql://localhost:3333/ticket_generator?createDatabaseIfNotExist=true&autoReconnect=false&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
