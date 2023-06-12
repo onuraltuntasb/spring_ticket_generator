@@ -77,13 +77,10 @@ public class UserController {
         return ResponseEntity.ok("commo es tas from ec2!");
     }
 
-    @GetMapping("/estas")
-    public ResponseEntity<?> getEstas() {
-        return ResponseEntity.ok("estas es tas from ec2!");
+    @GetMapping("/say")
+    public ResponseEntity<?> getSay() {
+        return ResponseEntity.ok("say  from ec2!");
     }
-
-
-
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@Valid @RequestBody User user,
