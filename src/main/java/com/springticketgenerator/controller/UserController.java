@@ -77,6 +77,11 @@ public class UserController {
         return ResponseEntity.ok("commo es tas from ec2!");
     }
 
+    @GetMapping("/estas")
+    public ResponseEntity<?> getEstas() {
+        return ResponseEntity.ok("estas es tas from ec2!");
+    }
+
 
 
 
