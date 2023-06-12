@@ -1,6 +1,7 @@
 package com.springticketgenerator.security;
 
 import com.springticketgenerator.exception.TokenCustomException;
+import com.springticketgenerator.setup.TicketProperties;
 import io.jsonwebtoken.*;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,8 +16,10 @@ import java.util.function.Function;
 @Component
 public class JwtUtils {
 
-    private String jwtSigningKey = "secretKey";
-    private int jwtExpirationMs = 86400000;
+    TicketProperties ticketProperties = new TicketProperties();
+
+    private final String jwtSecret = ticketProperties.getJwtSecret();
+    private final String jwtExpirationMs = ticketProperties.getJwtExpirationMs();
 
 
     public String extractUsername(String token) {
@@ -53,12 +56,12 @@ public class JwtUtils {
 
     public Claims extractAllClaims(String token) {
 
-        System.out.println("signkey : " + jwtSigningKey);
+        System.out.println("signkey : " + jwtSecret);
 
         Claims claims = null;
 
         try {
-            claims = Jwts.parser().setSigningKey(jwtSigningKey).parseClaimsJws(token).getBody();
+            claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
         } catch (ExpiredJwtException e) {
             throw new TokenCustomException(token, "Jwt token is expired");
         } catch (MalformedJwtException e) {
@@ -85,7 +88,7 @@ public class JwtUtils {
     public String createToken(Map<String, Object> claims, UserDetails userDetails) {
 
         System.out.println("token expire when : " + jwtExpirationMs);
-        System.out.println("token signingKey when : " + jwtSigningKey);
+        System.out.println("token signingKey when : " + jwtSecret);
 
 
         return Jwts.builder().setClaims(claims)
@@ -94,8 +97,8 @@ public class JwtUtils {
                 //TODO authorities
                 .claim("authorities", userDetails.getAuthorities())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(SignatureAlgorithm.HS256, jwtSigningKey).compact();
+                .setExpiration(new Date(System.currentTimeMillis() + Integer.parseInt(jwtExpirationMs)))
+                .signWith(SignatureAlgorithm.HS256, jwtSecret).compact();
     }
 
     public Boolean isTokenValid(String token, UserDetails userDetails) {
