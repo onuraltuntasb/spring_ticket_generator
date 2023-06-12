@@ -67,21 +67,6 @@ public class UserController {
         return ResponseEntity.ok("hello from ec2!");
     }
 
-    @GetMapping("/selam")
-    public ResponseEntity<?> getSelam() {
-        return ResponseEntity.ok("selam from ec2!");
-    }
-
-    @GetMapping("/commo")
-    public ResponseEntity<?> getCommo() {
-        return ResponseEntity.ok("commo es tas from ec2!");
-    }
-
-    @GetMapping("/say")
-    public ResponseEntity<?> getSay() {
-        return ResponseEntity.ok("say  from ec2!");
-    }
-
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@Valid @RequestBody User user,
             @RequestParam(value = "id", required = true) Long id,
