@@ -24,13 +24,16 @@ public class TagController {
     private final UserRepository userRepository;
 
     @PostMapping("/save")
-    public ResponseEntity<?> saveTag(@Valid @RequestBody Tag tag, @RequestHeader(name = "Authorization") String token) {
+    public ResponseEntity<?> saveTag(@Valid @RequestBody Tag tag,
+                                     @CookieValue(name = "eg-auth-cookie", defaultValue = "emptyOrNull")
+                                     String egAuthCookie) {
 
+        String email = egAuthCookie.substring(egAuthCookie.indexOf("email") + 6);
 
-        String email = jwtUtils.extractUsername(token.substring(7));
+        userRepository.findUserByEmail(email)
+                      .orElseThrow(() -> new ResourceNotFoundException("user not found with this email :" + email));
 
-        userRepository.findUserByEmail(email).orElseThrow(
-                () -> new ResourceNotFoundException("user not found with this email :" + email));
+        String token = egAuthCookie.substring(15, egAuthCookie.indexOf("email"));
 
         String auth = jwtUtils.getAuthorityClaim(token);
 
@@ -42,16 +45,28 @@ public class TagController {
 
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<?> getTags(
+            @CookieValue(name = "eg-auth-cookie", defaultValue = "emptyOrNull") String egAuthCookie) {
+
+        return ResponseEntity.ok(tagRepository.findAll());
+
+    }
+
     @PutMapping("/update")
     public ResponseEntity<?> updateTag(@Valid @RequestBody Tag tag, @RequestParam(value = "tag-id") Long tagId,
-                                       @RequestHeader(name = "Authorization") String token) {
+                                       @CookieValue(name = "eg-auth-cookie", defaultValue = "emptyOrNull")
+                                       String egAuthCookie) {
 
-        String email = jwtUtils.extractUsername(token.substring(7));
 
-        userRepository.findUserByEmail(email).orElseThrow(
-                () -> new ResourceNotFoundException("user not found with this email :" + email));
+        String email = egAuthCookie.substring(egAuthCookie.indexOf("email") + 6);
+
+        String token = egAuthCookie.substring(15, egAuthCookie.indexOf("email"));
 
         String auth = jwtUtils.getAuthorityClaim(token);
+
+        userRepository.findUserByEmail(email)
+                      .orElseThrow(() -> new ResourceNotFoundException("user not found with this email :" + email));
 
         if (auth.equals("ROLE_ADMIN")) {
             return ResponseEntity.ok().body(tagService.updateTag(tag, tagId));
@@ -62,15 +77,19 @@ public class TagController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteTag(@RequestParam(value = "tag-id") Long tagId,
-                                       @RequestHeader(name = "Authorization") String token) {
+    public ResponseEntity<?> deleteTag(@Valid @RequestBody Tag tag, @RequestParam(value = "tag-id") Long tagId,
+                                       @CookieValue(name = "eg-auth-cookie", defaultValue = "emptyOrNull")
+                                       String egAuthCookie) {
 
-        String email = jwtUtils.extractUsername(token.substring(7));
+        String email = egAuthCookie.substring(egAuthCookie.indexOf("email") + 6);
 
-        userRepository.findUserByEmail(email).orElseThrow(
-                () -> new ResourceNotFoundException("user not found with this email :" + email));
+        String token = egAuthCookie.substring(15, egAuthCookie.indexOf("email"));
 
         String auth = jwtUtils.getAuthorityClaim(token);
+
+
+        userRepository.findUserByEmail(email)
+                      .orElseThrow(() -> new ResourceNotFoundException("user not found with this email :" + email));
 
         if (auth.equals("ROLE_ADMIN")) {
             tagService.deleteTag(tagId);

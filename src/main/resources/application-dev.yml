@@ -1,7 +1,6 @@
-
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3333/ticket_generator?createDatabaseIfNotExist=true&autoReconnect=false&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    url: jdbc:mysql://localhost:3333/ticket_generator?createDatabaseIfNotExist=true&serverTimezone=UTC&autoReconnect=false&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
     username: root
     password: root
   jpa:
@@ -20,6 +19,9 @@ spring:
     init:
       mode: always
       platform: mysql
+  devtools:
+    livereload:
+      enabled: true
 
 server:
   port: 8080
@@ -31,4 +33,7 @@ logging:
       springframework:
         jdbc:
           core=TRACE:
+
+
+
 

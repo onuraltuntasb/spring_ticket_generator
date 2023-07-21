@@ -14,7 +14,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class TagServiceImpl implements TagService{
+public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
     private final EventRepository eventRepository;
@@ -22,7 +22,8 @@ public class TagServiceImpl implements TagService{
     @Override
     public Tag updateTag(Tag tag, Long tagId) {
 
-        Tag rTag = tagRepository.findById(tagId).orElseThrow(()-> new ResourceNotFoundException("Tag not found with this id :"+tagId));
+        Tag rTag = tagRepository.findById(tagId).orElseThrow(
+                () -> new ResourceNotFoundException("Tag not found with this id :" + tagId));
 
         rTag.setName(tag.getName());
 
@@ -38,7 +39,7 @@ public class TagServiceImpl implements TagService{
 
         Set<Event> events = eventRepository.findEventsByTagsIn(tags);
 
-        for (Event event:events) {
+        for (Event event : events) {
             event.removeTag(tagId);
         }
 

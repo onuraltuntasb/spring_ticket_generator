@@ -19,6 +19,7 @@ public class UserAuthResponse {
     private Collection<? extends GrantedAuthority> authorities;
     private String jwtToken;
     private String jwtRefreshToken;
+    private Boolean isAuth;
 
 
 }

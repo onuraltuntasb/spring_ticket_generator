@@ -1,6 +1,5 @@
 package com.springticketgenerator.setup;
 
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -8,9 +7,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "jwt")
 public class TicketProperties {
 
-    private String jwtSecret ="secretKey";
-    private String jwtExpirationMs ="86400000";
-    private String jwtRefreshExpirationSecond ="25920000";
+    private String jwtSecret = "secretKey";
+    private String jwtExpirationMs = "86400000";
+    private String jwtRefreshExpirationSecond = "25920000";
 
 
     public String getJwtSecret() {

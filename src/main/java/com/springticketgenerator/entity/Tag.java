@@ -16,7 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name="tag")
+@Table(name = "tag")
 public class Tag {
 
     @Id
@@ -28,7 +28,7 @@ public class Tag {
     private String name;
 
     @ManyToMany(fetch = FetchType.LAZY,
-            cascade ={CascadeType.PERSIST,CascadeType.MERGE},
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             mappedBy = "tags")
     @JsonIgnore
     private Set<Event> events = new HashSet<>();

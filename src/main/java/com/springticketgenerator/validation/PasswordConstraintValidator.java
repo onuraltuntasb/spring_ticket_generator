@@ -3,7 +3,6 @@ package com.springticketgenerator.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.passay.*;
-
 import java.util.Arrays;
 
 public class PasswordConstraintValidator implements ConstraintValidator<ValidPassword, String> {
@@ -30,7 +29,7 @@ public class PasswordConstraintValidator implements ConstraintValidator<ValidPas
                 new WhitespaceRule()
 
 
-        ));
+                                                                                 ));
 
         RuleResult result = passwordValidator.validate(new PasswordData(password));
 
@@ -39,7 +38,14 @@ public class PasswordConstraintValidator implements ConstraintValidator<ValidPas
         }
 
         //Sending one message each time failed validation.
-        constraintValidatorContext.buildConstraintViolationWithTemplate(passwordValidator.getMessages(result).stream().findFirst().get()).addConstraintViolation().disableDefaultConstraintViolation();
+        constraintValidatorContext
+                .buildConstraintViolationWithTemplate(passwordValidator
+                                                              .getMessages(result)
+                                                              .stream()
+                                                              .findFirst()
+                                                              .get())
+                .addConstraintViolation()
+                .disableDefaultConstraintViolation();
 
         return false;
 

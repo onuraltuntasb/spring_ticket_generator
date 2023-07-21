@@ -27,18 +27,18 @@ public class TagServiceImplTest {
 
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
 
     }
 
     @Test
-    void canUpdateTag(){
+    void canUpdateTag() {
 
         Tag tag = Tag.builder()
-                .id(1L)
-                .name("tag1")
-                .events(null)
-                .build();
+                     .id(1L)
+                     .name("tag1")
+                     .events(null)
+                     .build();
 
         tag.setName("tag1Updated");
 
@@ -47,17 +47,13 @@ public class TagServiceImplTest {
         when(tagRepository.save(any())).then(returnsFirstArg());
         when(tagRepository.findById(1L)).thenReturn(Optional.of(tag));
 
-        Tag rTag = underTest.updateTag(tag,1L);
+        Tag rTag = underTest.updateTag(tag, 1L);
 
         assertThat(rTag.getName()).isEqualTo(tag.getName());
 
-        verify(tagRepository,times(1)).save(rTag);
-        verify(tagRepository,times(1)).findById(1L);
-
-
+        verify(tagRepository, times(1)).save(rTag);
+        verify(tagRepository, times(1)).findById(1L);
 
     }
-
-
 
 }

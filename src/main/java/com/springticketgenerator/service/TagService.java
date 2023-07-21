@@ -4,7 +4,8 @@ import com.springticketgenerator.entity.Tag;
 
 public interface TagService {
 
-    Tag updateTag (Tag tag, Long tagId);
+    Tag updateTag(Tag tag, Long tagId);
+
     void deleteTag(Long tagId);
 
 }

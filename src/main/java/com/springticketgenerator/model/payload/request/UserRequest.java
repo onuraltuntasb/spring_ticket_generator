@@ -10,7 +10,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class UserRequest {
-    private Long id;
     private String name;
     private String email;
     private String password;
