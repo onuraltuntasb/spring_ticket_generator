@@ -30,19 +30,19 @@ public class TagRepositoryTest {
     private TagRepository tagRepository;
 
     @Test
-    public void shouldSaveTag(){
+    public void shouldSaveTag() {
 
         Set<Event> eventSet = new HashSet<>();
 
         Tag expectedTag = Tag.builder()
-                .id(null)
-                .name("tag1")
-                .events(eventSet)
-                .build();
+                             .id(null)
+                             .name("tag1")
+                             .events(eventSet)
+                             .build();
 
         Tag actualTag = tagRepository.save(expectedTag);
         assertThat(actualTag).usingRecursiveComparison()
-                .ignoringFields("id").isEqualTo(expectedTag);
+                             .ignoringFields("id").isEqualTo(expectedTag);
 
     }
 

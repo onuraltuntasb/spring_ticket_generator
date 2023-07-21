@@ -34,9 +34,10 @@ public class RefreshTokenService {
 
     public RefreshToken createRefreshToken(Long userId) {
         RefreshToken refreshToken = new RefreshToken();
-        System.out.println("refreshTokenDurationMs expire when : " + jwtRefreshExpirationSecond);
+        //System.out.println("refreshTokenDurationMs expire when : " + jwtRefreshExpirationSecond);
         refreshToken.setUser(userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found in refresh token method!")));
+                                           .orElseThrow(() -> new ResourceNotFoundException(
+                                                   "User not found in refresh token method!")));
         refreshToken.setExpiryDate(Instant.now().plusSeconds(Long.parseLong(jwtRefreshExpirationSecond)));
         refreshToken.setToken(UUID.randomUUID().toString());
 
@@ -49,7 +50,8 @@ public class RefreshTokenService {
             refreshTokenRepository.delete(token);
 
             throw new TokenCustomException(token.getToken(),
-                    "Refresh token was expired. Please make a new sign in request");
+                                           "Refresh token was expired. Please make a new sign in request"
+            );
         }
 
         return token;
@@ -58,6 +60,7 @@ public class RefreshTokenService {
     @Transactional
     public void deleteByUserId(Long userId) {
         refreshTokenRepository.deleteByUser(userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found in refresh token service!")));
+                                                          .orElseThrow(() -> new ResourceNotFoundException(
+                                                                  "User not found in refresh token service!")));
     }
 }

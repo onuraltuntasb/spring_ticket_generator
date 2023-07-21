@@ -24,7 +24,6 @@ public class SetupDataLoader implements
     private final RoleRepository roleRepository;
 
     boolean alreadySetup = false;
-    //TODO learn how to active hear on ci/cd
 
     @Override
     @Transactional

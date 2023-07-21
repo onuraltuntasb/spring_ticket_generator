@@ -28,17 +28,16 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
-            throws IOException, ServletException {
-        log.error("Unauthorized error: {}", authException.getMessage());
-        List<String> details = new ArrayList<String>();
-        details.add(authException.getMessage());
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+                         AuthenticationException authException) throws IOException, ServletException {
+        List<String> details = new ArrayList<String>(); details.add(authException.getMessage());
 
-        ApiErrorResponse err = new ApiErrorResponse(LocalDateTime.now(), HttpStatus.FORBIDDEN, "Custom token exception" ,details);
+        ApiErrorResponse err = new ApiErrorResponse(LocalDateTime.now(), HttpStatus.FORBIDDEN, "Custom token exception",
+                                                    details
+        );
 
-        String responseMsg = objectMapper.writeValueAsString(err);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        String responseMsg = objectMapper.writeValueAsString(err); response.setContentType(
+                MediaType.APPLICATION_JSON_VALUE); response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write(responseMsg);
     }
 }

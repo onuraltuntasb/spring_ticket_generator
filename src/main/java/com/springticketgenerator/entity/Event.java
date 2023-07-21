@@ -1,13 +1,11 @@
 package com.springticketgenerator.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -16,7 +14,8 @@ import java.util.Set;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Builder
 @Table(name = "event")
 public class Event {
@@ -53,6 +52,10 @@ public class Event {
     @NotNull
     private Boolean status;
 
+    @NotNull
+    private String seats;
+
+    private String seatingImageReference;
 
     @ManyToMany(
             fetch = FetchType.LAZY,
@@ -62,10 +65,13 @@ public class Event {
             inverseJoinColumns = {@JoinColumn(name="tag_id")})
     private Set<Tag> tags = new HashSet<>();
 
+
+    @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name="event_id",referencedColumnName = "id")
     private Set<Ticket> tickets = new HashSet<>();
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
@@ -83,5 +89,6 @@ public class Event {
             tag.getEvents().remove(this);
         }
     }
+
 
 }

@@ -24,6 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
@@ -48,14 +49,20 @@ public class SecurityConfig {
 
         http.cors(cors -> cors.disable());
 
-        http.csrf(csrf -> csrf.disable())
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPointJwt))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/user/**").permitAll()
-                                .requestMatchers("/api/test/**").permitAll()
-                                .anyRequest().authenticated()
-                );
+        http.csrf(csrf -> csrf.disable()).exceptionHandling(
+                exception -> exception.authenticationEntryPoint(authEntryPointJwt)).sessionManagement(
+                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(
+                auth -> auth
+                        .requestMatchers("/api/user/**")
+                        .permitAll()
+                        .requestMatchers("/api/test/**")
+                        .permitAll()
+                        .requestMatchers("/api/event/getall")
+                        .permitAll()
+                        .requestMatchers("/api/tag/all")
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated());
 
         http.authenticationProvider(authenticationProvider());
 
@@ -65,26 +72,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UrlBasedCorsConfigurationSource corsConfiguration() {
-        CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.applyPermitDefaultValues();
-        corsConfig.setAllowCredentials(true);
-        corsConfig.addAllowedMethod("GET");
-        corsConfig.addAllowedMethod("PATCH");
-        corsConfig.addAllowedMethod("POST");
-        corsConfig.addAllowedMethod("OPTIONS");
-        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-        corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type"));
-        corsConfig.setExposedHeaders(Arrays.asList("X-Get-Header"));
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig);
-        return source;
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration(); configuration.setAllowedOrigins(
+                Arrays.asList("http://localhost:3000")); configuration.setAllowedMethods(
+                Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration); return source;
     }
+
 
     @Bean
     public CorsFilter corsWebFilter() {
-        return new CorsFilter(corsConfiguration());
+        return new CorsFilter(corsConfigurationSource());
     }
 
 
@@ -103,8 +102,8 @@ public class SecurityConfig {
     public AuthenticationProvider authenticationProvider() {
         final DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
 
-        authenticationProvider.setUserDetailsService(userDetailsService());
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        authenticationProvider.setUserDetailsService(userDetailsService()); authenticationProvider.setPasswordEncoder(
+                passwordEncoder());
 
         return authenticationProvider;
     }
@@ -113,16 +112,14 @@ public class SecurityConfig {
     @Bean
     public RoleHierarchy roleHierarchy() {
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
-        String hierarchy = "ROLE_ADMIN > ROLE_STAFF \n ROLE_STAFF > ROLE_USER";
-        roleHierarchy.setHierarchy(hierarchy);
+        String hierarchy = "ROLE_ADMIN > ROLE_STAFF \n ROLE_STAFF > ROLE_USER"; roleHierarchy.setHierarchy(hierarchy);
         return roleHierarchy;
     }
 
     @Bean
     public DefaultWebSecurityExpressionHandler webSecurityExpressionHandlerOverride() {
         DefaultWebSecurityExpressionHandler expressionHandler = new DefaultWebSecurityExpressionHandler();
-        expressionHandler.setRoleHierarchy(roleHierarchy());
-        return expressionHandler;
+        expressionHandler.setRoleHierarchy(roleHierarchy()); return expressionHandler;
     }
 
 
@@ -131,8 +128,9 @@ public class SecurityConfig {
         return new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-                return (UserDetails) userRepository.findUserByEmail(email)
-                        .orElseThrow(() -> new ResourceNotFoundException("User not found in security config with this email:" + email));
+                return (UserDetails) userRepository.findUserByEmail(email).orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "User not found in security config with this email:" + email));
             }
         };
     }

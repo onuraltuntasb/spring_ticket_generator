@@ -1,10 +1,14 @@
 package com.springticketgenerator.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springticketgenerator.entity.Event;
 import com.springticketgenerator.entity.Tag;
 import com.springticketgenerator.entity.User;
 import com.springticketgenerator.exception.ResourceNotFoundException;
 import com.springticketgenerator.model.payload.request.EventRequest;
+import com.springticketgenerator.model.payload.response.EventResponse;
 import com.springticketgenerator.repository.EventRepository;
 import com.springticketgenerator.repository.TagRepository;
 import com.springticketgenerator.repository.UserRepository;
@@ -12,13 +16,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -28,132 +30,135 @@ import java.util.*;
 @Slf4j
 public class EventServiceImpl implements EventService {
 
+    //TODO jdbcTemplate RuntimeException logs
+
     private final EventRepository eventRepository;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
     private final JdbcTemplate jdbcTemplate;
-
+    private final ObjectMapper objectMapper;
     ZoneOffset zoneOffSet = ZoneOffset.of("+00:00");
 
 
     @Transactional
     @Override
-    public Event updateEvent(EventRequest eventRequest, Long eventId) {
+    public EventResponse updateEvent(EventRequest eventRequest, Long eventId) {
 
-        Event rEvent = eventRepository.findById(eventId).orElseThrow(
-                () -> new ResourceNotFoundException("Event not found with this id : " + eventId)
-        );
+        Event rEvent = eventRepository.findById(eventId)
+                                      .orElseThrow(() -> new ResourceNotFoundException(
+                                              "Event not found with this id : " + eventId));
+
 
         OffsetDateTime offsetCurrDateTime = OffsetDateTime.now(zoneOffSet);
 
-        //event start date is after current date
-        if (rEvent.getStartDate().isAfter(offsetCurrDateTime)) {
 
-            //event start date is before event end date
-            if (rEvent.getStartDate().isBefore(rEvent.getEndDate())) {
+        if (eventRequest.getStatus() != null && rEvent.getStatus() != null) {
 
-                //ticket selling start date is after event start date
-                if (rEvent.getTicketSellingStartDate().isBefore(rEvent.getStartDate().minusMinutes(5))) {
+            if (eventRequest.getStartDate() != null && eventRequest.getEndDate() != null &&
+                    eventRequest.getTicketSellingStartDate() != null) {
 
-                    rEvent.setDescription(eventRequest.getDescription());
+                if (eventRequest.getStartDate().isAfter(offsetCurrDateTime)) {
 
-                    if(eventRequest.getSeats()!=null){
-                        //drop as_eventid and insert data again
-                        String tableName = "as_" + eventId;
-                        dropASTable(tableName);
-                        try {
-                            insertAsBatch(tableName, eventRequest.getSeats());
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    if (eventRequest.getStartDate().isBefore(eventRequest.getEndDate())) {
 
-                    if (eventRequest.getStatus() != null && rEvent.getStatus() != null) {
+                        if (eventRequest.getTicketSellingStartDate()
+                                        .isBefore(eventRequest.getStartDate().minusMinutes(5))) {
 
-                        if (!rEvent.getStatus() && eventRequest.getStatus()) {
 
-                            if (eventRequest.getStartDate() != null && eventRequest.getEndDate() != null
-                                    && eventRequest.getTicketSellingStartDate() != null) {
+                            rEvent.setStartDate(eventRequest.getStartDate());
+                            rEvent.setEndDate(eventRequest.getEndDate());
+                            rEvent.setTicketSellingStartDate(eventRequest.getTicketSellingStartDate());
 
-                                if (eventRequest.getStartDate().isAfter(offsetCurrDateTime)) {
 
-                                    if (eventRequest.getStartDate().isBefore(rEvent.getEndDate())) {
-
-                                        if (eventRequest.getTicketSellingStartDate().isBefore(rEvent.getStartDate().minusMinutes(5))) {
-                                            rEvent.setStartDate(eventRequest.getStartDate());
-                                            rEvent.setEndDate(eventRequest.getEndDate());
-                                            rEvent.setTicketSellingStartDate(eventRequest.getTicketSellingStartDate());
-                                            rEvent.setStatus(true);
-                                        } else {
-                                            throw new RuntimeException("Current date must be 5min before ticket selling date");
-                                        }
-
-                                    } else {
-                                        throw new RuntimeException("Start date is after endDate");
-                                    }
-
-                                } else {
-                                    throw new RuntimeException("Start date is after endDate");
+                            if (eventRequest.getSeats() != null) {
+                                try {
+                                    rEvent.setSeats(objectMapper.writeValueAsString(eventRequest.getSeats()));
+                                    rEvent.setSeatCount(eventRequest.getSeats().size());
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(e);
                                 }
-
-
-                            } else {
-                                throw new RuntimeException("Start date or endDate or ticket selling date is null");
                             }
+
+
                         } else {
-                            rEvent.setStatus(eventRequest.getStatus());
+                            throw new RuntimeException("Current date must be 5min before ticket selling date");
                         }
 
                     } else {
-                        throw new RuntimeException("Event request status or event status is null");
+                        throw new RuntimeException("Start date is after endDate");
                     }
-
-
-                    List<Long> requestTags = eventRequest.getTags();
-                    Set<Tag> tags = new HashSet<>();
-
-                    if (requestTags != null) {
-                        for (Long requestTag : requestTags) {
-
-                            tags.add(tagRepository.findById(requestTag)
-                                    .orElseThrow(() -> new ResourceNotFoundException("Tag not found with this id : " + requestTag)));
-
-                        }
-                        rEvent.setTags(tags);
-                    }
-                    if(eventRequest.getDescription()!=null){
-                        rEvent.setDescription(eventRequest.getDescription());
-                    }
-
 
                 } else {
-                    throw new RuntimeException("Current date must be 5min before ticket selling date");
+                    throw new RuntimeException("Start date is after currentDate");
                 }
+
+                rEvent.setUpdatedAt(offsetCurrDateTime);
+                rEvent.setName(eventRequest.getName());
+                rEvent.setDescription(eventRequest.getDescription());
+                rEvent.setStatus(eventRequest.getStatus());
+                rEvent.setSeatingImageReference(eventRequest.getSeatingImageReference());
+
+
             } else {
-                throw new RuntimeException("Start date is after end date");
+                throw new RuntimeException("Start date or endDate or ticket selling date is null");
             }
 
+
         } else {
-            throw new RuntimeException("Start date is not after current date!");
+            throw new RuntimeException("Event request status or event status is null");
         }
 
-        return eventRepository.save(rEvent);
+
+        Set<Long> requestTags = eventRequest.getTags();
+        Set<Tag> tags = new HashSet<>();
+
+        if (requestTags != null) {
+            for (Long requestTag : requestTags) {
+
+                tags.add(tagRepository.findById(requestTag).orElseThrow(
+                        () -> new ResourceNotFoundException("Tag not found with this id : " + requestTag)));
+
+            }
+            rEvent.setTags(tags);
+        }
+
+
+        EventResponse eventResponse = null;
+        try {
+            eventResponse = EventResponse.builder().id(rEvent.getId()).name(rEvent.getName())
+                                         .description(rEvent.getDescription()).seatCount(rEvent.getSeatCount())
+                                         .startDate(rEvent.getStartDate()).endDate(rEvent.getEndDate())
+                                         .ticketSellingStartDate(rEvent.getTicketSellingStartDate()).createdAt(
+                            rEvent.getCreatedAt())
+                                         .updatedAt(rEvent.getUpdatedAt()).status(rEvent.getStatus())
+                                         .tags(new HashSet<>(rEvent.getTags().stream().map(el -> el.getId()).toList()))
+                                         .seats(objectMapper.readValue(rEvent.getSeats(),
+                                                                       new TypeReference<List<HashMap<String, Object>>>() {
+                                                                       }
+                                                                      )).seatingImageReference(
+                            rEvent.getSeatingImageReference()).build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        eventRepository.save(rEvent);
+
+        return eventResponse;
 
     }
 
 
     @Transactional
     @Override
-    public Event saveEvent(EventRequest eventRequest, Long userId) {
+    public EventResponse saveEvent(EventRequest eventRequest, Long userId) {
 
-        List<Long> requestTagIds = eventRequest.getTags();
+        Set<Long> requestTagIds = eventRequest.getTags();
         Set<Tag> tags = new HashSet<>();
 
         if (requestTagIds != null) {
             for (Long requestTagId : requestTagIds) {
-                tags.add(tagRepository.findById(requestTagId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Tag not found with this id :" + requestTagId))
-                );
+                tags.add(tagRepository.findById(requestTagId).orElseThrow(
+                        () -> new ResourceNotFoundException("Tag not found with this id :" + requestTagId)));
 
             }
         }
@@ -163,8 +168,8 @@ public class EventServiceImpl implements EventService {
         OffsetDateTime offsetCurrDateTime = OffsetDateTime.now(zoneOffSet);
 
 
-        if (eventRequest.getStartDate() != null && eventRequest.getEndDate() != null
-                && eventRequest.getTicketSellingStartDate() != null) {
+        if (eventRequest.getStartDate() != null && eventRequest.getEndDate() != null &&
+                eventRequest.getTicketSellingStartDate() != null) {
 
             //event startDate is after current time
             if (eventRequest.getStartDate().isAfter(offsetCurrDateTime)) {
@@ -173,20 +178,17 @@ public class EventServiceImpl implements EventService {
                 if (eventRequest.getStartDate().isBefore(eventRequest.getEndDate())) {
 
                     //ticketSelling before startDate
-                    if (eventRequest.getTicketSellingStartDate().isBefore(eventRequest.getStartDate().minusMinutes(5))) {
+                    if (eventRequest.getTicketSellingStartDate()
+                                    .isBefore(eventRequest.getStartDate().minusMinutes(5))) {
 
-                        event = Event.builder()
-                                .name(eventRequest.getName())
-                                .description(eventRequest.getDescription())
-                                .seatCount(eventRequest.getSeats().size())
-                                .startDate(eventRequest.getStartDate())
-                                .ticketSellingStartDate(eventRequest.getTicketSellingStartDate())
-                                .endDate(eventRequest.getEndDate())
-                                .createdAt(offsetCurrDateTime)
-                                .updatedAt(offsetCurrDateTime)
-                                .status(eventRequest.getStatus())
-                                .tags(tags)
-                                .build();
+
+                        event = Event.builder().name(eventRequest.getName()).description(eventRequest.getDescription())
+                                     .seatCount(eventRequest.getSeats().size()).startDate(eventRequest.getStartDate())
+                                     .ticketSellingStartDate(eventRequest.getTicketSellingStartDate())
+                                     .endDate(eventRequest.getEndDate()).createdAt(offsetCurrDateTime)
+                                     .updatedAt(offsetCurrDateTime).status(eventRequest.getStatus()).tags(tags)
+                                     .seatingImageReference(eventRequest.getSeatingImageReference()).build();
+
 
                     } else {
                         throw new RuntimeException("Ticket selling start date must be after start date!");
@@ -207,92 +209,199 @@ public class EventServiceImpl implements EventService {
         }
 
 
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException("User not found with this id : " + userId)
-        );
+        User user = userRepository.findById(userId)
+                                  .orElseThrow(() -> new ResourceNotFoundException(
+                                          "User not found with this id : " + userId));
+
+        try {
+            event.setSeats(objectMapper.writeValueAsString(eventRequest.getSeats()));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         user.getEvents().add(event);
 
         Event event1 = eventRepository.saveAndFlush(event);
-
-        String tableName = "as_" + event1.getId();
-
-        //TODO warning - sql injection
-        jdbcTemplate.execute("CREATE TABLE " + tableName + " (\n" +
-                "    id int NOT NULL AUTO_INCREMENT,\n" +
-                "    name varchar(255) NOT NULL,\n" +
-                "    PRIMARY KEY (id)\n" +
-                ");");
-
-
+        EventResponse eventResponse = null;
         try {
-            insertAsBatch(tableName, eventRequest.getSeats());
-        } catch (SQLException e) {
+            eventResponse = EventResponse.builder().id(event1.getId()).name(event1.getName())
+                                         .description(event1.getDescription()).seatCount(event1.getSeatCount())
+                                         .startDate(event1.getStartDate()).ticketSellingStartDate(
+                            event1.getTicketSellingStartDate())
+                                         .endDate(event1.getEndDate()).createdAt(event1.getCreatedAt()).updatedAt(
+                            event1.getUpdatedAt())
+                                         .status(event1.getStatus())
+                                         .seats(objectMapper.readValue(event.getSeats(),
+                                                                       new TypeReference<List<HashMap<String, Object>>>() {
+                                                                       }
+                                                                      )).tags(
+                            new HashSet<>(event1.getTags().stream().map(el -> el.getId()).toList()))
+                                         .seatingImageReference(event1.getSeatingImageReference()).build();
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
-
-        return event1;
+        return eventResponse;
     }
 
     //TODO delete tickets after a certain time, store procedure
     @Override
     public void deleteEvent(Long eventId) {
 
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("event not found with this id!"));
+        Event event = eventRepository.findById(eventId)
+                                     .orElseThrow(() -> new ResourceNotFoundException("event not found with this id!"));
 
         if (!event.getStatus()) {
             eventRepository.deleteById(eventId);
-            dropASTable("as_" + eventId);
         } else {
             throw new RuntimeException("Event status is active, must be disable");
         }
     }
 
-    public void dropASTable(String tableName) {
+    @Override
+    public List<EventResponse> getAllEventsByUserId(Long userId) {
+
+        List<Event> eventList = null;
+        List<EventResponse> eventResponseList = new ArrayList<>();
+        List<Long> tagList = null;
+
+        EventResponse eventResponse = null;
 
         try {
-            jdbcTemplate.execute("DROP TABLE " + tableName + ";");
+            eventList = jdbcTemplate.query("SELECT * FROM event WHERE user_id = ? ",
+                                           new BeanPropertyRowMapper<Event>(Event.class), userId
+                                          );
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }
 
-    }
+        for (Event event : eventList) {
 
-
-    public void insertAsBatch(String tableName, List<String> seats) throws SQLException {
-
-        DataSource ds = jdbcTemplate.getDataSource();
-        Connection connection = null;
-
-        connection = ds.getConnection();
-
-
-        connection.setAutoCommit(false);
-
-        String sql = "insert into " + tableName + " (name) values (?)";
-        PreparedStatement ps = null;
-
-        ps = connection.prepareStatement(sql);
-
-        final int batchSize = 1000;
-        int count = 0;
-
-        for (String seat : seats) {
-            ps.setString(1, seat);
-            ps.addBatch();
-
-            ++count;
-
-            if (count % batchSize == 0 || count == seats.size()) {
-                ps.executeBatch();
-                ps.clearBatch();
+            try {
+                tagList = jdbcTemplate.queryForList("SELECT tag_id FROM event_tag WHERE event_id = ? ", Long.class,
+                                                    event.getId()
+                                                   );
+            } catch (DataAccessException e) {
+                throw new RuntimeException(e);
             }
+
+
+            try {
+                eventResponse = EventResponse.builder().id(event.getId()).name(event.getName())
+                                             .description(event.getDescription()).seatCount(event.getSeatCount())
+                                             .startDate(event.getStartDate()).ticketSellingStartDate(
+                                event.getTicketSellingStartDate())
+                                             .endDate(event.getEndDate()).createdAt(event.getCreatedAt()).updatedAt(
+                                event.getUpdatedAt())
+                                             .status(event.getStatus()).seats(objectMapper.readValue(event.getSeats(),
+                                                                                                     new TypeReference<List<HashMap<String, Object>>>() {
+                                                                                                     }
+                                                                                                    )).tags(
+                                new HashSet<>(tagList)).seatingImageReference(event.getSeatingImageReference())
+                                             .build();
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+
+            eventResponseList.add(eventResponse);
+
         }
 
-        connection.commit();
-        ps.close();
+        return eventResponseList;
 
+    }
+
+    @Override
+    public List<EventResponse> getAllEvents() {
+
+
+        List<Event> eventList = null;
+        List<EventResponse> eventResponseList = new ArrayList<>();
+        List<Long> tagList = null;
+
+        EventResponse eventResponse = null;
+
+        try {
+            eventList = jdbcTemplate.query("SELECT * FROM event", new BeanPropertyRowMapper<Event>(Event.class));
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (Event event : eventList) {
+
+            try {
+                tagList = jdbcTemplate.queryForList("SELECT tag_id FROM event_tag WHERE event_id = ? ", Long.class,
+                                                    event.getId()
+                                                   );
+            } catch (DataAccessException e) {
+                throw new RuntimeException(e);
+            }
+
+
+            try {
+                eventResponse = EventResponse.builder().id(event.getId()).name(event.getName())
+                                             .description(event.getDescription()).seatCount(event.getSeatCount())
+                                             .startDate(event.getStartDate()).ticketSellingStartDate(
+                                event.getTicketSellingStartDate())
+                                             .endDate(event.getEndDate()).createdAt(event.getCreatedAt()).updatedAt(
+                                event.getUpdatedAt())
+                                             .status(event.getStatus()).seats(objectMapper.readValue(event.getSeats(),
+                                                                                                     new TypeReference<List<HashMap<String, Object>>>() {
+                                                                                                     }
+                                                                                                    )).tags(
+                                new HashSet<>(tagList)).seatingImageReference(event.getSeatingImageReference())
+                                             .build();
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+
+            eventResponseList.add(eventResponse);
+
+        }
+
+        return eventResponseList;
+
+    }
+
+    @Override
+    public EventResponse getEventByUserId(Long userId) {
+
+        Event event = null;
+        EventResponse eventResponse = null;
+        List<Long> tagList = null;
+        try {
+            event = jdbcTemplate.queryForObject("SELECT * FROM event WHERE id=?",
+                                                new BeanPropertyRowMapper<Event>(Event.class), userId
+                                               );
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            tagList = jdbcTemplate.queryForList("SELECT tag_id FROM event_tag WHERE event_id = ? ", Long.class,
+                                                event.getId()
+                                               );
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            eventResponse =
+                    EventResponse.builder().id(event.getId()).name(event.getName()).description(event.getDescription())
+                                 .seatCount(event.getSeatCount()).startDate(event.getStartDate())
+                                 .ticketSellingStartDate(event.getTicketSellingStartDate()).endDate(event.getEndDate())
+                                 .createdAt(event.getCreatedAt()).updatedAt(event.getUpdatedAt()).status(
+                                         event.getStatus())
+                                 .seats(objectMapper.readValue(event.getSeats(),
+                                                               new TypeReference<List<HashMap<String, Object>>>() {
+                                                               }
+                                                              )).tags(new HashSet<>(tagList))
+                                 .seatingImageReference(event.getSeatingImageReference()).build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        return eventResponse;
     }
 
 }

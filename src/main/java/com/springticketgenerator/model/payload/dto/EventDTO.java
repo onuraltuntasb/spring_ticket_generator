@@ -2,12 +2,13 @@ package com.springticketgenerator.model.payload.dto;
 
 import com.springticketgenerator.entity.Tag;
 import lombok.Data;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
 public class EventDTO {
-    private Long id;
+    private String id;
     private String name;
     private String description;
     private int seatCount;
