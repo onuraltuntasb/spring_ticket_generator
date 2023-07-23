@@ -252,6 +252,10 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long userId) {
 
         System.out.println("deleting user...");
+        System.out.println("deleting user...");
+        System.out.println("deleting user...");
+        System.out.println("deleting user...");
+
 
         userRepository.findById(userId)
                       .orElseThrow(() -> new ResourceNotFoundException(
