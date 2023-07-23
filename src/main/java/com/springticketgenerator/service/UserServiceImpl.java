@@ -251,9 +251,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long userId) {
 
-        System.out.println("deleting user...");
-        System.out.println("deleting user...");
-        System.out.println("deleting user...");
+
         System.out.println("deleting user...");
 
 
@@ -263,6 +261,7 @@ public class UserServiceImpl implements UserService {
                       ));
 
         refreshTokenService.deleteByUserId(userId);
+        System.out.println("deleting user...");
 
         //TODO before delete need to finish other related tasks
         //deleting user is generally bad practise, disable user account instead deleting user
