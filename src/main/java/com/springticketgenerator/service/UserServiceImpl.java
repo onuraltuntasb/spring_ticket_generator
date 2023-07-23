@@ -251,12 +251,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long userId) {
 
+
+        System.out.println("deleting user...");
+
+
         userRepository.findById(userId)
                       .orElseThrow(() -> new ResourceNotFoundException(
                               "User not found with this id:" + userId
                       ));
 
         refreshTokenService.deleteByUserId(userId);
+        System.out.println("deleting user...");
 
         //TODO before delete need to finish other related tasks
         //deleting user is generally bad practise, disable user account instead deleting user
